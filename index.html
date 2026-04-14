@@ -82,14 +82,14 @@
       <span class="badge badge-count" id="total">0枚</span>
     </div>
   </div>
- 
+
   <div class="prop-setup" id="prop-setup">
     <div class="prop-setup-title">物件名を設定してください</div>
     <div class="prop-setup-desc">入力後は固定されます。次の物件に移る際は「変更」から切り替えられます。</div>
     <input type="text" id="prop-input" placeholder="例：山田邸・鈴木様物件">
     <button class="start-btn" onclick="fixProp()">この物件名で開始する</button>
   </div>
- 
+
   <div class="prop-fixed" id="prop-fixed">
     <div>
       <div class="prop-fixed-label">物件名（固定中）</div>
@@ -97,10 +97,10 @@
     </div>
     <button class="change-btn" onclick="changeProp()">変更</button>
   </div>
- 
+
   <div class="main" id="main">
     <div class="sec-label">部位を選ぶ</div>
- 
+
     <button class="cat-btn" onclick="toggleCat(this)">
       <div class="cat-left"><div class="cat-color" style="background:#D85A30;"></div><span class="cat-name">外壁・外部</span><span class="cat-count">16項目</span></div>
       <span class="cat-arrow">›</span>
@@ -127,7 +127,7 @@
       <div class="sub-row"><input type="radio" name="p" id="a15" value="外壁｜軒天・破風板" data-cat="外壁・外部"><label for="a15">軒天・破風板</label></div>
       <div class="sub-row"><input type="radio" name="p" id="a16" value="外壁｜バルコニー・ベランダ" data-cat="外壁・外部"><label for="a16">バルコニー・ベランダ</label></div>
     </div>
- 
+
     <button class="cat-btn" onclick="toggleCat(this)">
       <div class="cat-left"><div class="cat-color" style="background:#534AB7;"></div><span class="cat-name">屋根・小屋裏</span><span class="cat-count">16項目</span></div>
       <span class="cat-arrow">›</span>
@@ -154,7 +154,7 @@
       <div class="sub-row"><input type="radio" name="p" id="b15" value="屋根｜結露・カビの発生" data-cat="屋根・小屋裏"><label for="b15">結露・カビの発生</label></div>
       <div class="sub-row"><input type="radio" name="p" id="b16" value="屋根｜天窓・導光設備の状態" data-cat="屋根・小屋裏"><label for="b16">天窓・導光設備の状態</label></div>
     </div>
- 
+
     <button class="cat-btn" onclick="toggleCat(this)">
       <div class="cat-left"><div class="cat-color" style="background:#1a7a4a;"></div><span class="cat-name">内部・居室</span><span class="cat-count">16項目</span></div>
       <span class="cat-arrow">›</span>
@@ -181,7 +181,7 @@
       <div class="sub-row"><input type="radio" name="p" id="c15" value="内部｜窓まわりの結露・カビ" data-cat="内部・居室"><label for="c15">窓まわりの結露・カビ</label></div>
       <div class="sub-row"><input type="radio" name="p" id="c16" value="内部｜室内ドア・収納扉の状態" data-cat="内部・居室"><label for="c16">室内ドア・収納扉の状態</label></div>
     </div>
- 
+
     <button class="cat-btn" onclick="toggleCat(this)">
       <div class="cat-left"><div class="cat-color" style="background:#BA7517;"></div><span class="cat-name">構造・耐震</span><span class="cat-count">16項目</span></div>
       <span class="cat-arrow">›</span>
@@ -208,16 +208,16 @@
       <div class="sub-row"><input type="radio" name="p" id="d15" value="構造｜床下換気口・基礎通気の状態" data-cat="構造・耐震"><label for="d15">床下換気口・基礎通気の状態</label></div>
       <div class="sub-row"><input type="radio" name="p" id="d16" value="構造｜地盤沈下・外構の変状" data-cat="構造・耐震"><label for="d16">地盤沈下・外構の変状</label></div>
     </div>
- 
+
     <div class="action-area">
       <div class="camera-hint" id="camera-hint">
-        ① まず標準カメラアプリで撮影してください<br>
-        ② 撮影後このツールに戻り「記録する」を押してください
+        「撮影する」を押すとカメラが起動します<br>
+        撮影した写真は自動的にカメラロールに保存されます
       </div>
       <div class="sel-info" id="sel-info">部位を選んでください</div>
       <button class="shoot-btn" id="shoot-btn" onclick="record()">部位を選んでください</button>
     </div>
- 
+
     <div class="log-area">
       <div class="log-header">
         <div class="log-title">撮影記録</div>
@@ -229,18 +229,18 @@
     </div>
   </div>
 </div>
- 
+
 <script>
 var recs = [];
 var selPart = null;
 var selCat = null;
 var propName = '';
- 
+
 // Service Worker登録
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
- 
+
 function fixProp() {
   var val = document.getElementById('prop-input').value.trim();
   if (!val) { alert('物件名を入力してください'); return; }
@@ -250,7 +250,7 @@ function fixProp() {
   document.getElementById('prop-fixed').style.display = 'flex';
   document.getElementById('main').style.display = 'block';
 }
- 
+
 function changeProp() {
   if (recs.length > 0) {
     if (!confirm('物件名を変更すると記録がリセットされます。よろしいですか？')) return;
@@ -270,7 +270,7 @@ function changeProp() {
   document.getElementById('prop-setup').style.display = 'block';
   render();
 }
- 
+
 function toggleCat(btn) {
   var sub = btn.nextElementSibling;
   var wasOpen = sub.classList.contains('open');
@@ -280,7 +280,7 @@ function toggleCat(btn) {
   });
   if (!wasOpen) { sub.classList.add('open'); btn.classList.add('open'); }
 }
- 
+
 document.querySelectorAll('input[name=p]').forEach(function(r){
   r.addEventListener('change', function(){
     selPart = this.value;
@@ -294,10 +294,10 @@ document.querySelectorAll('input[name=p]').forEach(function(r){
     var btn = document.getElementById('shoot-btn');
     btn.disabled = false;
     btn.classList.add('ready');
-    btn.textContent = 'No.' + nextNo + '　記録する　—　' + label;
+    btn.textContent = 'No.' + nextNo + '　撮影する　—　' + label;
   });
 });
- 
+
 function record() {
   if (!selPart) return;
   var nextNo = recs.length + 1;
@@ -305,18 +305,38 @@ function record() {
   var time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
   var date = (now.getMonth()+1) + '/' + now.getDate();
   var label = selPart.split('｜')[1];
-  recs.unshift({ no: nextNo, prop: propName, cat: selCat, label: label, time: time, date: date });
-  render();
-  var btn = document.getElementById('shoot-btn');
-  var orig = btn.textContent;
-  btn.textContent = '✓ No.' + nextNo + ' 記録しました！';
-  btn.style.background = '#0F6E56';
-  setTimeout(function(){
-    btn.textContent = orig;
-    btn.style.background = '';
-  }, 1500);
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = function(e) {
+    if (e.target.files && e.target.files[0]) {
+      recs.unshift({ no: nextNo, prop: propName, cat: selCat, label: label, time: time, date: date });
+      render();
+      var btn = document.getElementById('shoot-btn');
+      var orig = btn.textContent;
+      btn.textContent = '✓ No.' + nextNo + ' 記録しました！';
+      btn.style.background = '#0F6E56';
+      setTimeout(function(){
+        btn.textContent = orig;
+        btn.style.background = '';
+        // 次の番号を更新
+        updateNextNo();
+      }, 1500);
+    }
+  };
+  input.click();
 }
- 
+
+function updateNextNo() {
+  if (!selPart) return;
+  var nextNo = recs.length + 1;
+  var label = selPart.split('｜')[1];
+  document.getElementById('sel-info').innerHTML = '選択中：<b>' + selCat + ' › ' + label + '</b>　<span style="color:#BA7517">次はNo.' + nextNo + '</span>';
+  var btn = document.getElementById('shoot-btn');
+  btn.textContent = 'No.' + nextNo + '　撮影する　—　' + label;
+}
+
 function render() {
   var wrap = document.getElementById('log-wrap');
   document.getElementById('total').textContent = recs.length + '枚';
@@ -330,12 +350,19 @@ function render() {
   html += '<button class="exp-btn" onclick="exportCSV()">記録をCSVで書き出す（帰社後Googleドライブへ）</button>';
   wrap.innerHTML = html;
 }
- 
+
+function deleteRec(idx) {
+  var r = recs[idx];
+  if (!confirm('No.' + r.no + '「' + r.label + '」を削除しますか？')) return;
+  recs.splice(idx, 1);
+  render();
+}
+
 function clearAll() {
   if (recs.length === 0) return;
   if (confirm('撮影記録をすべてリセットしますか？')) { recs = []; render(); }
 }
- 
+
 function exportCSV() {
   if (recs.length === 0) return;
   var rows = ['\uFEFF撮影No.,物件名,カテゴリ,部位,日付,時刻'];
@@ -348,7 +375,7 @@ function exportCSV() {
   a.download = '撮影記録_' + propName + '_' + new Date().toLocaleDateString('ja-JP').replace(/\//g,'-') + '.csv';
   a.click(); URL.revokeObjectURL(url);
 }
- 
+
 document.getElementById('prop-input').addEventListener('keydown', function(e){
   if (e.key === 'Enter') fixProp();
 });
