@@ -288,30 +288,33 @@ document.querySelectorAll('input[name=p]').forEach(function(r){
     document.querySelectorAll('.sub-row').forEach(function(row){ row.classList.remove('sel'); });
     this.closest('.sub-row').classList.add('sel');
     var label = this.value.split('｜')[1];
-    document.getElementById('sel-info').innerHTML = '選択中：<b>' + selCat + ' › ' + label + '</b>';
+    var nextNo = recs.length + 1;
+    document.getElementById('sel-info').innerHTML = '選択中：<b>' + selCat + ' › ' + label + '</b>　<span style="color:#BA7517">次はNo.' + nextNo + '</span>';
     document.getElementById('camera-hint').style.display = 'block';
     var btn = document.getElementById('shoot-btn');
     btn.disabled = false;
     btn.classList.add('ready');
-    btn.textContent = '記録する　—　' + label;
+    btn.textContent = 'No.' + nextNo + '　記録する　—　' + label;
   });
 });
  
 function record() {
   if (!selPart) return;
+  var nextNo = recs.length + 1;
   var now = new Date();
   var time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
   var date = (now.getMonth()+1) + '/' + now.getDate();
-  recs.unshift({ prop: propName, cat: selCat, label: selPart.split('｜')[1], time: time, date: date });
+  var label = selPart.split('｜')[1];
+  recs.unshift({ no: nextNo, prop: propName, cat: selCat, label: label, time: time, date: date });
   render();
   var btn = document.getElementById('shoot-btn');
   var orig = btn.textContent;
-  btn.textContent = '✓ 記録しました！';
+  btn.textContent = '✓ No.' + nextNo + ' 記録しました！';
   btn.style.background = '#0F6E56';
   setTimeout(function(){
     btn.textContent = orig;
     btn.style.background = '';
-  }, 1200);
+  }, 1500);
 }
  
 function render() {
@@ -335,9 +338,9 @@ function clearAll() {
  
 function exportCSV() {
   if (recs.length === 0) return;
-  var rows = ['\uFEFF番号,物件名,カテゴリ,部位,日付,時刻'];
-  recs.slice().reverse().forEach(function(r, i){
-    rows.push([i+1, r.prop, r.cat, r.label, r.date, r.time].join(','));
+  var rows = ['\uFEFF撮影No.,物件名,カテゴリ,部位,日付,時刻'];
+  recs.slice().reverse().forEach(function(r){
+    rows.push([r.no, r.prop, r.cat, r.label, r.date, r.time].join(','));
   });
   var blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
@@ -352,4 +355,3 @@ document.getElementById('prop-input').addEventListener('keydown', function(e){
 </script>
 </body>
 </html>
- 
