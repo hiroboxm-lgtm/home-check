@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="住宅診断">
+<title>住宅診断 現場記録</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #f5f4f0; font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif; }
+
+  .app { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; }
+
+  /* トップバー */
+  .topbar {
+    background: #1a1a1a;
+    padding: 14px 16px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.03em; }
+  .topbar-sub { font-size: 10px; color: #888; margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 6px; }
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+  .badge-off { background: #2a2a2a; color: #aaa; border: 1px solid #333; }
+  .badge-count { background: #e8f5ef; color: #1a7a4a; border: 1px solid #b8dfc9; }
+
+  /* 物件名入力 */
+  .prop-setup {
+    padding: 32px 20px 28px;
+    border-bottom: 1px solid #eee;
+  }
+  .prop-setup-title { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; letter-spacing: 0.04em; }
+  .prop-setup-desc { font-size: 12px; color: #888; margin-bottom: 16px; line-height: 1.5; }
+  .prop-setup input {
+    width: 100%; font-size: 16px; padding: 12px 14px;
+    border: 1.5px solid #ddd; border-radius: 10px;
+    background: #fafafa; color: #1a1a1a; margin-bottom: 12px;
+    outline: none; transition: border-color 0.15s;
+    font-family: inherit;
+  }
+  .prop-setup input:focus { border-color: #1a7a4a; background: #fff; }
+  .prop-setup input::placeholder { color: #bbb; }
+  .start-btn {
+    width: 100%; padding: 14px; border-radius: 10px; border: none;
+    background: #1a1a1a; color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.04em; font-family: inherit;
+    transition: background 0.15s;
+  }
+  .start-btn:active { background: #333; }
+
+  /* 物件名固定バー */
+  .prop-fixed {
+    display: none; padding: 10px 16px;
+    background: #f0faf5; border-bottom: 1px solid #c8e8d8;
+    align-items: center; justify-content: space-between;
+  }
+  .prop-fixed-label { font-size: 10px; color: #5a9a7a; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 2px; }
+  .prop-fixed-name { font-size: 14px; font-weight: 700; color: #1a4a2a; }
+  .change-btn {
+    font-size: 11px; color: #1a7a4a; background: #fff;
+    border: 1px solid #a8d8b8; border-radius: 6px;
+    padding: 5px 10px; cursor: pointer; font-family: inherit;
+    white-space: nowrap; flex-shrink: 0; margin-left: 10px;
+  }
+  .change-btn:active { background: #f0faf5; }
+
+  /* メインコンテンツ */
+  .main { display: none; }
+
+  /* セクションラベル */
+  .sec-label {
+    font-size: 10px; font-weight: 700; color: #999;
+    padding: 12px 16px 4px; letter-spacing: 0.08em;
+    text-transform: uppercase; background: #f5f4f0;
+  }
+
+  /* カテゴリボタン */
+  .cat-btn {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px; background: #fff; border: none;
+    border-bottom: 1px solid #eee; cursor: pointer; text-align: left;
+    transition: background 0.1s;
+  }
+  .cat-btn:active { background: #f9f9f9; }
+  .cat-left { display: flex; align-items: center; gap: 10px; }
+  .cat-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .cat-name { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+  .cat-count { font-size: 11px; color: #bbb; margin-left: 4px; font-weight: 400; }
+  .cat-arrow { font-size: 14px; color: #ccc; transition: transform 0.2s; }
+  .cat-btn.open .cat-arrow { transform: rotate(90deg); }
+
+  /* サブリスト */
+  .sub-list { display: none; background: #fafafa; border-bottom: 1px solid #eee; }
+  .sub-list.open { display: block; }
+  .blk-head {
+    font-size: 10px; font-weight: 700; color: #aaa;
+    padding: 9px 16px 4px 32px; letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .sub-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px 10px 32px;
+    border-bottom: 1px solid #f0f0f0; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .sub-row:last-child { border-bottom: none; }
+  .sub-row:active { background: #f0f0f0; }
+  .sub-row.sel { background: #edfaf4; }
+  .sub-row input[type=radio] {
+    width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;
+    accent-color: #1a7a4a;
+  }
+  .sub-row label { font-size: 13px; color: #1a1a1a; cursor: pointer; flex: 1; line-height: 1.4; }
+
+  /* アクションエリア */
+  .action-area {
+    padding: 14px 16px; background: #fff;
+    border-top: 1px solid #eee; position: sticky; bottom: 0;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  }
+  .sel-info { font-size: 12px; color: #888; margin-bottom: 8px; min-height: 16px; }
+  .sel-info b { color: #1a7a4a; font-weight: 700; }
+  .shoot-btn {
+    width: 100%; padding: 16px; border-radius: 12px; border: none;
+    background: #1a1a1a; color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.04em; font-family: inherit;
+    transition: background 0.15s; line-height: 1;
+  }
+  .shoot-btn:disabled { background: #e8e8e8; color: #bbb; cursor: not-allowed; }
+  .shoot-btn.ready { background: #1a7a4a; }
+  .shoot-btn.ready:active { background: #155c38; }
+
+  /* 記録エリア */
+  .log-area { padding: 16px 16px 80px; }
+  .log-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .log-title { font-size: 12px; font-weight: 700; color: #aaa; letter-spacing: 0.06em; text-transform: uppercase; }
+  .clr-btn { font-size: 11px; color: #e05050; background: none; border: none; cursor: pointer; font-family: inherit; }
+
+  .empty-msg { font-size: 13px; color: #ccc; text-align: center; padding: 24px 0; }
+
+  .log-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid #f2f2f2;
+  }
+  .log-num { font-size: 11px; color: #ccc; min-width: 22px; text-align: right; padding-top: 2px; }
+  .log-dot { width: 8px; height: 8px; border-radius: 50%; background: #1a7a4a; flex-shrink: 0; margin-top: 4px; }
+  .log-body { flex: 1; }
+  .log-part { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+  .log-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+  .exp-btn {
+    width: 100%; margin-top: 16px; padding: 13px;
+    border-radius: 10px; border: 1.5px solid #ddd;
+    background: #fff; color: #444; font-size: 13px;
+    cursor: pointer; font-family: inherit; font-weight: 600;
+    letter-spacing: 0.02em; transition: background 0.1s;
+  }
+  .exp-btn:active { background: #f5f5f5; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- トップバー -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">住宅診断 現場記録</div>
+      <div class="topbar-sub">オフライン対応 · 電波なしで使用可</div>
+    </div>
+    <div class="topbar-right">
+      <span class="badge badge-count" id="total">0枚</span>
+    </div>
+  </div>
+
+  <!-- 物件名入力 -->
+  <div class="prop-setup" id="prop-setup">
+    <div class="prop-setup-title">物件名を設定してください</div>
+    <div class="prop-setup-desc">入力後は固定されます。次の物件に移る際は「変更」から切り替えられます。</div>
+    <input type="text" id="prop-input" placeholder="例：山田邸・鈴木様物件" />
+    <button class="start-btn" onclick="fixProp()">この物件名で開始する</button>
+  </div>
+
+  <!-- 物件名固定バー -->
+  <div class="prop-fixed" id="prop-fixed">
+    <div>
+      <div class="prop-fixed-label">物件名（固定中）</div>
+      <div class="prop-fixed-name" id="prop-display"></div>
+    </div>
+    <button class="change-btn" onclick="changeProp()">変更</button>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <div class="main" id="main">
+
+    <div class="sec-label">部位を選ぶ</div>
+
+    <!-- 外壁・外部 -->
+    <button class="cat-btn" onclick="toggleCat(this)">
+      <div class="cat-left">
+        <div class="cat-color" style="background:#D85A30;"></div>
+        <span class="cat-name">外壁・外部</span><span class="cat-count">16項目</span>
+      </div>
+      <span class="cat-arrow">›</span>
+    </button>
+    <div class="sub-list">
+      <div class="blk-head">A｜外壁仕上げ材の劣化</div>
+      <div class="sub-row"><input type="radio" name="p" id="a1" value="外壁｜塗膜の劣化状態" data-cat="外壁・外部"><label for="a1">塗膜の劣化状態</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a2" value="外壁｜ひび割れ（クラック）" data-cat="外壁・外部"><label for="a2">ひび割れ（クラック）</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a3" value="外壁｜浮き・剥がれ" data-cat="外壁・外部"><label for="a3">浮き・剥がれ</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a4" value="外壁｜汚れ・カビ・藻" data-cat="外壁・外部"><label for="a4">汚れ・カビ・藻</label></div>
+      <div class="blk-head">B｜シーリング</div>
+      <div class="sub-row"><input type="radio" name="p" id="a5" value="外壁｜シーリング硬化・ひび割れ" data-cat="外壁・外部"><label for="a5">シーリング 硬化・ひび割れ</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a6" value="外壁｜シーリング剥離・欠落" data-cat="外壁・外部"><label for="a6">シーリング 剥離・欠落</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a7" value="外壁｜窓回り・サッシ周囲" data-cat="外壁・外部"><label for="a7">窓回り・サッシ周囲</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a8" value="外壁｜役物・笠木まわり" data-cat="外壁・外部"><label for="a8">役物・笠木まわり</label></div>
+      <div class="blk-head">C｜外壁材種別確認</div>
+      <div class="sub-row"><input type="radio" name="p" id="a9" value="外壁｜モルタル塗り" data-cat="外壁・外部"><label for="a9">モルタル塗り</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a10" value="外壁｜窯業系サイディング" data-cat="外壁・外部"><label for="a10">窯業系サイディング</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a11" value="外壁｜金属系サイディング" data-cat="外壁・外部"><label for="a11">金属系サイディング</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a12" value="外壁｜木質系・羽目板" data-cat="外壁・外部"><label for="a12">木質系・羽目板</label></div>
+      <div class="blk-head">D｜付帯部・取り合い</div>
+      <div class="sub-row"><input type="radio" name="p" id="a13" value="外壁｜雨樋（軒樋・たてとい）" data-cat="外壁・外部"><label for="a13">雨樋（軒樋・たてとい）</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a14" value="外壁｜水切り・土台部" data-cat="外壁・外部"><label for="a14">水切り・土台部</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a15" value="外壁｜軒天・破風板" data-cat="外壁・外部"><label for="a15">軒天・破風板</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="a16" value="外壁｜バルコニー・ベランダ" data-cat="外壁・外部"><label for="a16">バルコニー・ベランダ</label></div>
+    </div>
+
+    <!-- 屋根・小屋裏 -->
+    <button class="cat-btn" onclick="toggleCat(this)">
+      <div class="cat-left">
+        <div class="cat-color" style="background:#534AB7;"></div>
+        <span class="cat-name">屋根・小屋裏</span><span class="cat-count">16項目</span>
+      </div>
+      <span class="cat-arrow">›</span>
+    </button>
+    <div class="sub-list">
+      <div class="blk-head">A｜屋根仕上げ材の劣化</div>
+      <div class="sub-row"><input type="radio" name="p" id="b1" value="屋根｜屋根材の破損・ズレ・欠落" data-cat="屋根・小屋裏"><label for="b1">屋根材の破損・ズレ・欠落</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b2" value="屋根｜塗膜劣化・コケ・藻" data-cat="屋根・小屋裏"><label for="b2">塗膜劣化・コケ・藻（スレート）</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b3" value="屋根｜棟・棟包みの状態" data-cat="屋根・小屋裏"><label for="b3">棟・棟包みの状態</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b4" value="屋根｜谷・雨押え・水切りの状態" data-cat="屋根・小屋裏"><label for="b4">谷・雨押え・水切りの状態</label></div>
+      <div class="blk-head">B｜雨漏り・雨水浸入の痕跡</div>
+      <div class="sub-row"><input type="radio" name="p" id="b5" value="屋根｜野地板・垂木の水染み・腐朽" data-cat="屋根・小屋裏"><label for="b5">野地板・垂木の水染み・腐朽</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b6" value="屋根｜天井面の雨染み・変色" data-cat="屋根・小屋裏"><label for="b6">天井面の雨染み・変色</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b7" value="屋根｜棟・谷・サッシ周囲からの浸入" data-cat="屋根・小屋裏"><label for="b7">棟・谷・サッシ周囲からの浸入</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b8" value="屋根｜結露による濡れとの判別" data-cat="屋根・小屋裏"><label for="b8">結露による濡れとの判別</label></div>
+      <div class="blk-head">C｜構造材（小屋組）の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="b9" value="屋根｜母屋・垂木・棟木の健全性" data-cat="屋根・小屋裏"><label for="b9">母屋・垂木・棟木の健全性</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b10" value="屋根｜小屋束・火打ち梁の状態" data-cat="屋根・小屋裏"><label for="b10">小屋束・火打ち梁の状態</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b11" value="屋根｜蟻害（シロアリ被害）" data-cat="屋根・小屋裏"><label for="b11">蟻害（シロアリ被害）</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b12" value="屋根｜金物・接合部の状態" data-cat="屋根・小屋裏"><label for="b12">金物・接合部の状態</label></div>
+      <div class="blk-head">D｜断熱・換気の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="b13" value="屋根｜断熱材の有無・状態" data-cat="屋根・小屋裏"><label for="b13">断熱材の有無・状態</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b14" value="屋根｜小屋裏換気口の状態" data-cat="屋根・小屋裏"><label for="b14">小屋裏換気口の状態</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b15" value="屋根｜結露・カビの発生" data-cat="屋根・小屋裏"><label for="b15">結露・カビの発生</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="b16" value="屋根｜天窓・導光設備の状態" data-cat="屋根・小屋裏"><label for="b16">天窓・導光設備の状態</label></div>
+    </div>
+
+    <!-- 内部・居室 -->
+    <button class="cat-btn" onclick="toggleCat(this)">
+      <div class="cat-left">
+        <div class="cat-color" style="background:#1a7a4a;"></div>
+        <span class="cat-name">内部・居室</span><span class="cat-count">16項目</span>
+      </div>
+      <span class="cat-arrow">›</span>
+    </button>
+    <div class="sub-list">
+      <div class="blk-head">A｜床の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="c1" value="内部｜床の傾き・不陸" data-cat="内部・居室"><label for="c1">床の傾き・不陸</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c2" value="内部｜床のたわみ・沈み・床鳴り" data-cat="内部・居室"><label for="c2">床のたわみ・沈み・床鳴り</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c3" value="内部｜床仕上げ材の劣化" data-cat="内部・居室"><label for="c3">床仕上げ材の劣化</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c4" value="内部｜根太・床束の状態" data-cat="内部・居室"><label for="c4">根太・床束の状態（床下点検口から）</label></div>
+      <div class="blk-head">B｜壁の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="c5" value="内部｜クラック・ひび割れ" data-cat="内部・居室"><label for="c5">クラック・ひび割れ</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c6" value="内部｜クロスの劣化・剥がれ" data-cat="内部・居室"><label for="c6">クロス（壁紙）の劣化・剥がれ</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c7" value="内部｜雨染み・水染み" data-cat="内部・居室"><label for="c7">雨染み・水染み</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c8" value="内部｜壁の傾き・膨らみ" data-cat="内部・居室"><label for="c8">壁の傾き・膨らみ</label></div>
+      <div class="blk-head">C｜天井の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="c9" value="内部｜天井の雨染み・変色" data-cat="内部・居室"><label for="c9">天井の雨染み・変色</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c10" value="内部｜天井のたわみ・下がり" data-cat="内部・居室"><label for="c10">天井のたわみ・下がり</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c11" value="内部｜クロスのカビ・剥がれ" data-cat="内部・居室"><label for="c11">クロスのカビ・剥がれ</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c12" value="内部｜点検口の有無と小屋裏確認" data-cat="内部・居室"><label for="c12">点検口の有無と小屋裏確認</label></div>
+      <div class="blk-head">D｜開口部・建具の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="c13" value="内部｜建具の開閉不具合" data-cat="内部・居室"><label for="c13">建具の開閉不具合</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c14" value="内部｜サッシ枠の歪み・隙間" data-cat="内部・居室"><label for="c14">サッシ枠の歪み・隙間</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c15" value="内部｜窓まわりの結露・カビ" data-cat="内部・居室"><label for="c15">窓まわりの結露・カビ</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="c16" value="内部｜室内ドア・収納扉の状態" data-cat="内部・居室"><label for="c16">室内ドア・収納扉の状態</label></div>
+    </div>
+
+    <!-- 構造・耐震 -->
+    <button class="cat-btn" onclick="toggleCat(this)">
+      <div class="cat-left">
+        <div class="cat-color" style="background:#BA7517;"></div>
+        <span class="cat-name">構造・耐震</span><span class="cat-count">16項目</span>
+      </div>
+      <span class="cat-arrow">›</span>
+    </button>
+    <div class="sub-list">
+      <div class="blk-head">A｜建築年・耐震基準の確認</div>
+      <div class="sub-row"><input type="radio" name="p" id="d1" value="構造｜建築年と耐震基準の判定" data-cat="構造・耐震"><label for="d1">建築年と耐震基準の判定</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d2" value="構造｜平成12年（2000年）基準の確認" data-cat="構造・耐震"><label for="d2">平成12年（2000年）基準の確認</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d3" value="構造｜増改築・用途変更の履歴" data-cat="構造・耐震"><label for="d3">増改築・用途変更の履歴</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d4" value="構造｜耐震診断・補強工事の実施歴" data-cat="構造・耐震"><label for="d4">耐震診断・補強工事の実施歴</label></div>
+      <div class="blk-head">B｜基礎の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="d5" value="構造｜基礎の種類・形式" data-cat="構造・耐震"><label for="d5">基礎の種類・形式</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d6" value="構造｜基礎のひび割れ" data-cat="構造・耐震"><label for="d6">基礎のひび割れ</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d7" value="構造｜基礎の欠損・爆裂・錆汁" data-cat="構造・耐震"><label for="d7">基礎の欠損・爆裂・錆汁</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d8" value="構造｜基礎の傾き・不同沈下" data-cat="構造・耐震"><label for="d8">基礎の傾き・不同沈下</label></div>
+      <div class="blk-head">C｜構造躯体（軸組）の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="d9" value="構造｜柱・梁の腐朽・蟻害" data-cat="構造・耐震"><label for="d9">柱・梁の腐朽・蟻害</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d10" value="構造｜筋交い・耐力壁の有無" data-cat="構造・耐震"><label for="d10">筋交い・耐力壁の有無</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d11" value="構造｜接合金物の状態" data-cat="構造・耐震"><label for="d11">接合金物の状態</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d12" value="構造｜柱の傾き" data-cat="構造・耐震"><label for="d12">柱の傾き</label></div>
+      <div class="blk-head">D｜床下・地盤の状態</div>
+      <div class="sub-row"><input type="radio" name="p" id="d13" value="構造｜床下の湿気・結露・水たまり" data-cat="構造・耐震"><label for="d13">床下の湿気・結露・水たまり</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d14" value="構造｜土台・大引きの腐朽・蟻害" data-cat="構造・耐震"><label for="d14">土台・大引きの腐朽・蟻害</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d15" value="構造｜床下換気口・基礎通気の状態" data-cat="構造・耐震"><label for="d15">床下換気口・基礎通気の状態</label></div>
+      <div class="sub-row"><input type="radio" name="p" id="d16" value="構造｜地盤沈下・外構の変状" data-cat="構造・耐震"><label for="d16">地盤沈下・外構の変状</label></div>
+    </div>
+
+    <!-- アクション（画面下部固定） -->
+    <div class="action-area">
+      <div class="sel-info" id="sel-info">部位を選んでください</div>
+      <button class="shoot-btn" id="shoot-btn" disabled onclick="shoot()">部位を選んでください</button>
+    </div>
+
+    <!-- 撮影記録 -->
+    <div class="log-area">
+      <div class="log-header">
+        <div class="log-title">撮影記録</div>
+        <button class="clr-btn" onclick="clearAll()">リセット</button>
+      </div>
+      <div id="log-wrap">
+        <div class="empty-msg">まだ撮影記録がありません</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+var recs = [];
+var selPart = null;
+var selCat = null;
+var propName = '';
+
+function fixProp() {
+  var val = document.getElementById('prop-input').value.trim();
+  if (!val) { alert('物件名を入力してください'); return; }
+  propName = val;
+  document.getElementById('prop-setup').style.display = 'none';
+  document.getElementById('prop-display').textContent = propName;
+  document.getElementById('prop-fixed').style.display = 'flex';
+  document.getElementById('main').style.display = 'block';
+}
+
+function changeProp() {
+  if (recs.length > 0) {
+    if (!confirm('物件名を変更すると記録がリセットされます。よろしいですか？')) return;
+    recs = [];
+  }
+  propName = ''; selPart = null; selCat = null;
+  document.querySelectorAll('input[name=p]').forEach(function(r){ r.checked = false; });
+  document.querySelectorAll('.sub-row').forEach(function(r){ r.classList.remove('sel'); });
+  document.getElementById('sel-info').textContent = '部位を選んでください';
+  var btn = document.getElementById('shoot-btn');
+  btn.disabled = true; btn.textContent = '部位を選んでください';
+  btn.classList.remove('ready');
+  document.getElementById('prop-input').value = '';
+  document.getElementById('prop-fixed').style.display = 'none';
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('prop-setup').style.display = 'block';
+  render();
+}
+
+function toggleCat(btn) {
+  var sub = btn.nextElementSibling;
+  var wasOpen = sub.classList.contains('open');
+  document.querySelectorAll('.sub-list.open').forEach(function(s){
+    s.classList.remove('open');
+    s.previousElementSibling.classList.remove('open');
+  });
+  if (!wasOpen) { sub.classList.add('open'); btn.classList.add('open'); }
+}
+
+document.querySelectorAll('input[name=p]').forEach(function(r){
+  r.addEventListener('change', function(){
+    selPart = this.value;
+    selCat = this.dataset.cat;
+    document.querySelectorAll('.sub-row').forEach(function(row){ row.classList.remove('sel'); });
+    this.closest('.sub-row').classList.add('sel');
+    var label = this.value.split('｜')[1];
+    document.getElementById('sel-info').innerHTML = '選択中：<b>' + selCat + ' › ' + label + '</b>';
+    var btn = document.getElementById('shoot-btn');
+    btn.disabled = false;
+    btn.classList.add('ready');
+    btn.textContent = '撮影する　—　' + label;
+  });
+});
+
+function shoot() {
+  if (!selPart) return;
+  var now = new Date();
+  var time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+  var date = (now.getMonth()+1) + '/' + now.getDate();
+  var input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.onchange = function(e){
+    if (!e.target.files || !e.target.files[0]) return;
+    var file = e.target.files[0];
+    var label = selPart.split('｜')[1];
+
+    // カメラロールへの保存（Web Share API）
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      // ファイル名に部位名と時刻を付与
+      var fileName = propName + '_' + label + '_' + date.replace('/','') + '_' + time.replace(/:/g,'') + '.jpg';
+
+      // Web Share APIが使える場合（iOS Safari対応）
+      if (navigator.share && navigator.canShare) {
+        fetch(ev.target.result)
+          .then(function(r){ return r.blob(); })
+          .then(function(blob){
+            var shareFile = new File([blob], fileName, { type: 'image/jpeg' });
+            if (navigator.canShare({ files: [shareFile] })) {
+              navigator.share({
+                files: [shareFile],
+                title: label,
+              }).catch(function(){});
+            }
+          });
+      } else {
+        // フォールバック：ダウンロードリンクで保存
+        var a = document.createElement('a');
+        a.href = ev.target.result;
+        a.download = fileName;
+        a.click();
+      }
+    };
+    reader.readAsDataURL(file);
+
+    // 記録に追加
+    recs.unshift({ prop: propName, cat: selCat, label: selPart.split('｜')[1], time: time, date: date });
+    render();
+  };
+  input.click();
+}
+
+function render() {
+  var wrap = document.getElementById('log-wrap');
+  document.getElementById('total').textContent = recs.length + '枚';
+  if (recs.length === 0) {
+    wrap.innerHTML = '<div class="empty-msg">まだ撮影記録がありません</div>';
+    return;
+  }
+  var html = recs.map(function(r, i){
+    return '<div class="log-item"><div class="log-num">' + (recs.length - i) + '</div><div class="log-dot"></div><div class="log-body"><div class="log-part">' + r.label + '</div><div class="log-meta">' + r.cat + '　' + r.date + ' ' + r.time + '</div></div></div>';
+  }).join('');
+  html += '<button class="exp-btn" onclick="exportCSV()">記録をCSVで書き出す（帰社後Googleドライブへ）</button>';
+  wrap.innerHTML = html;
+}
+
+function clearAll() {
+  if (recs.length === 0) return;
+  if (confirm('撮影記録をすべてリセットしますか？')) { recs = []; render(); }
+}
+
+function exportCSV() {
+  if (recs.length === 0) return;
+  var rows = ['\uFEFF番号,物件名,カテゴリ,部位,日付,時刻'];
+  recs.slice().reverse().forEach(function(r, i){
+    rows.push([i+1, r.prop, r.cat, r.label, r.date, r.time].join(','));
+  });
+  var blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url;
+  a.download = '撮影記録_' + propName + '_' + new Date().toLocaleDateString('ja-JP').replace(/\//g,'-') + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// Enterキーで物件名確定
+document.getElementById('prop-input').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') fixProp();
+});
+</script>
+</body>
+</html>
