@@ -308,7 +308,7 @@ function record() {
   var input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
-  input.capture = '';
+
   input.onchange = function(e) {
     if (e.target.files && e.target.files[0]) {
       recs.unshift({ no: nextNo, prop: propName, cat: selCat, label: label, time: time, date: date });
