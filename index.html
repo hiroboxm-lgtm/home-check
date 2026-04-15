@@ -379,6 +379,22 @@ function exportCSV() {
 document.getElementById('prop-input').addEventListener('keydown', function(e){
   if (e.key === 'Enter') fixProp();
 });
+
+ // 写真選択専用（カメラではなくアルバム）
+function pickPhotoFromLibrary(callback) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.removeAttribute('capture'); // ←これ重要
+
+  input.onchange = function(e) {
+    if (e.target.files && e.target.files[0]) {
+      callback(e.target.files[0]);
+    }
+  };
+
+  input.click();
+}
 </script>
 </body>
 </html>
