@@ -50,25 +50,33 @@
   .sub-row input[type=radio] { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; accent-color: #1a7a4a; }
   .sub-row label { font-size: 13px; color: #1a1a1a; cursor: pointer; flex: 1; line-height: 1.4; }
   .action-area { padding: 14px 16px; background: #fff; border-top: 1px solid #eee; position: sticky; bottom: 0; box-shadow: 0 -4px 16px rgba(0,0,0,0.06); }
-  .camera-hint { display: none; margin-bottom: 10px; padding: 10px 12px; background: #fff8e8; border: 1px solid #f0d080; border-radius: 8px; font-size: 12px; color: #7a5c00; line-height: 1.7; }
+  .camera-hint { display: none; margin-bottom: 10px; padding: 10px 12px; background: #e8f5ef; border: 1px solid #a8d8b8; border-radius: 8px; font-size: 12px; color: #1a5a3a; line-height: 1.7; }
   .sel-info { font-size: 12px; color: #888; margin-bottom: 8px; min-height: 16px; }
   .sel-info b { color: #1a7a4a; font-weight: 700; }
-  .shoot-btn { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #e8e8e8; color: #bbb; font-size: 15px; font-weight: 700; cursor: not-allowed; letter-spacing: 0.04em; font-family: inherit; transition: background 0.15s; line-height: 1; }
+  .btn-row { display: flex; gap: 8px; }
+  .shoot-btn { flex: 1; padding: 16px 8px; border-radius: 12px; border: none; background: #e8e8e8; color: #bbb; font-size: 14px; font-weight: 700; cursor: not-allowed; font-family: inherit; transition: background 0.15s; line-height: 1.2; text-align: center; }
   .shoot-btn.ready { background: #1a7a4a; color: #fff; cursor: pointer; }
   .shoot-btn.ready:active { background: #155c38; }
+  .pick-btn { flex: 1; padding: 16px 8px; border-radius: 12px; border: none; background: #e8e8e8; color: #bbb; font-size: 14px; font-weight: 700; cursor: not-allowed; font-family: inherit; transition: background 0.15s; line-height: 1.2; text-align: center; }
+  .pick-btn.ready { background: #185FA5; color: #fff; cursor: pointer; }
+  .pick-btn.ready:active { background: #0c447c; }
   .log-area { padding: 16px 16px 80px; }
   .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .log-title { font-size: 12px; font-weight: 700; color: #aaa; letter-spacing: 0.06em; text-transform: uppercase; }
   .clr-btn { font-size: 11px; color: #e05050; background: none; border: none; cursor: pointer; font-family: inherit; }
   .empty-msg { font-size: 13px; color: #ccc; text-align: center; padding: 24px 0; }
   .log-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f2f2f2; }
-  .log-num { font-size: 11px; color: #ccc; min-width: 22px; text-align: right; padding-top: 2px; }
+  .log-num { font-size: 12px; font-weight: 700; color: #1a7a4a; min-width: 36px; text-align: right; padding-top: 2px; }
   .log-dot { width: 8px; height: 8px; border-radius: 50%; background: #1a7a4a; flex-shrink: 0; margin-top: 4px; }
   .log-body { flex: 1; }
   .log-part { font-size: 13px; font-weight: 700; color: #1a1a1a; }
   .log-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .del-btn { flex-shrink: 0; background: none; border: none; color: #e05050; font-size: 20px; cursor: pointer; padding: 4px 8px; }
   .exp-btn { width: 100%; margin-top: 16px; padding: 13px; border-radius: 10px; border: 1.5px solid #ddd; background: #fff; color: #444; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; letter-spacing: 0.02em; transition: background 0.1s; }
   .exp-btn:active { background: #f5f5f5; }
+  .processing { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 300; display: none; align-items: center; justify-content: center; }
+  .processing.show { display: flex; }
+  .processing-box { background: #fff; border-radius: 12px; padding: 24px 32px; text-align: center; font-size: 14px; color: #1a1a1a; }
 </style>
 </head>
 <body>
@@ -211,11 +219,13 @@
 
     <div class="action-area">
       <div class="camera-hint" id="camera-hint">
-        「撮影する」を押すとカメラが起動します<br>
-        撮影した写真は自動的にカメラロールに保存されます
+        ① 標準カメラで撮影 → ② 写真アプリから選択 → ③ 番号付きで保存されます
       </div>
       <div class="sel-info" id="sel-info">部位を選んでください</div>
-      <button class="shoot-btn" id="shoot-btn" onclick="record()">部位を選んでください</button>
+      <div class="btn-row">
+        <button class="shoot-btn" id="shoot-btn" onclick="openCamera()">部位を選んでください</button>
+        <button class="pick-btn" id="pick-btn" onclick="pickPhoto()">写真を選ぶ</button>
+      </div>
     </div>
 
     <div class="log-area">
@@ -230,13 +240,17 @@
   </div>
 </div>
 
+<!-- 処理中オーバーレイ -->
+<div class="processing" id="processing">
+  <div class="processing-box">番号を書き込み中...</div>
+</div>
+
 <script>
 var recs = [];
 var selPart = null;
 var selCat = null;
 var propName = '';
 
-// Service Worker登録
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
@@ -261,9 +275,10 @@ function changeProp() {
   document.querySelectorAll('.sub-row').forEach(function(r){ r.classList.remove('sel'); });
   document.getElementById('sel-info').textContent = '部位を選んでください';
   document.getElementById('camera-hint').style.display = 'none';
-  var btn = document.getElementById('shoot-btn');
-  btn.disabled = true; btn.textContent = '部位を選んでください';
-  btn.classList.remove('ready');
+  document.getElementById('shoot-btn').classList.remove('ready');
+  document.getElementById('shoot-btn').textContent = '部位を選んでください';
+  document.getElementById('pick-btn').classList.remove('ready');
+  document.getElementById('pick-btn').textContent = '写真を選ぶ';
   document.getElementById('prop-input').value = '';
   document.getElementById('prop-fixed').style.display = 'none';
   document.getElementById('main').style.display = 'none';
@@ -291,76 +306,116 @@ document.querySelectorAll('input[name=p]').forEach(function(r){
     var nextNo = recs.length + 1;
     document.getElementById('sel-info').innerHTML = '選択中：<b>' + selCat + ' › ' + label + '</b>　<span style="color:#BA7517">次はNo.' + nextNo + '</span>';
     document.getElementById('camera-hint').style.display = 'block';
-    var btn = document.getElementById('shoot-btn');
-    btn.disabled = false;
-    btn.classList.add('ready');
-    btn.textContent = 'No.' + nextNo + '　撮影する　—　' + label;
+    var sb = document.getElementById('shoot-btn');
+    sb.classList.add('ready');
+    sb.textContent = 'No.' + nextNo + ' カメラ撮影';
+    var pb = document.getElementById('pick-btn');
+    pb.classList.add('ready');
+    pb.textContent = 'No.' + nextNo + ' 写真を選ぶ';
   });
 });
 
-function record() {
+// カメラで撮影（その場で撮る）
+function openCamera() {
   if (!selPart) return;
-  var nextNo = recs.length + 1;
-  var now = new Date();
-  var time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
-  var date = (now.getMonth()+1) + '/' + now.getDate();
-  var label = selPart.split('｜')[1];
   var input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
-
+  input.capture = 'environment';
   input.onchange = function(e) {
-  if (e.target.files && e.target.files[0]) {
-    var file = e.target.files[0];
-    var nextNo = recs.length + 1;
-
-    addNumberToImage(file, 'No.' + nextNo, function(processedBlob) {
-
-      // ★ここで保存（ダウンロード）
-      var url = URL.createObjectURL(processedBlob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'No_' + nextNo + '.jpg';
-      a.click();
-
-      // 記録も残す
-      recs.unshift({
-        no: nextNo,
-        prop: propName,
-        cat: selCat,
-        label: label,
-        time: time,
-        date: date
-      });
-
-      render();
-    });
-  }
-};
-      recs.unshift({ no: nextNo, prop: propName, cat: selCat, label: label, time: time, date: date });
-      render();
-      var btn = document.getElementById('shoot-btn');
-      var orig = btn.textContent;
-      btn.textContent = '✓ No.' + nextNo + ' 記録しました！';
-      btn.style.background = '#0F6E56';
-      setTimeout(function(){
-        btn.textContent = orig;
-        btn.style.background = '';
-        // 次の番号を更新
-        updateNextNo();
-      }, 1500);
+    if (e.target.files && e.target.files[0]) {
+      processPhoto(e.target.files[0]);
     }
   };
   input.click();
 }
 
-function updateNextNo() {
+// アルバムから選択（撮影済みの写真に番号を付ける）
+function pickPhoto() {
+  if (!selPart) return;
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  // captureを付けないのでアルバムが開く
+  input.onchange = function(e) {
+    if (e.target.files && e.target.files[0]) {
+      processPhoto(e.target.files[0]);
+    }
+  };
+  input.click();
+}
+
+// 写真にNo.を書き込んでダウンロード保存し記録に追加
+function processPhoto(file) {
+  var nextNo = recs.length + 1;
+  var now = new Date();
+  var time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+  var date = (now.getMonth()+1) + '/' + now.getDate();
+  var label = selPart.split('｜')[1];
+
+  document.getElementById('processing').classList.add('show');
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      var ctx = canvas.getContext('2d');
+
+      // 元画像を描画
+      ctx.drawImage(img, 0, 0);
+
+      // 番号の大きさを画像サイズに合わせる
+      var fontSize = Math.max(40, Math.round(img.width * 0.06));
+      var padH = Math.round(fontSize * 0.5);
+      var barH = Math.round(fontSize * 2.2);
+
+      // 黒帯（下部）
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.fillRect(0, img.height - barH, img.width, barH);
+
+      // No.（大きく）
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold ' + fontSize + 'px sans-serif';
+      ctx.fillText('No.' + nextNo, padH, img.height - barH + fontSize * 1.3);
+
+      // 部位名（小さく右寄り）
+      var smallFont = Math.round(fontSize * 0.55);
+      ctx.font = smallFont + 'px sans-serif';
+      ctx.fillStyle = '#ccffcc';
+      ctx.fillText(label, padH + fontSize * 3.5, img.height - barH + fontSize * 1.3);
+
+      canvas.toBlob(function(blob) {
+        document.getElementById('processing').classList.remove('show');
+
+        // ダウンロード保存
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'No' + String(nextNo).padStart(3,'0') + '_' + label + '.jpg';
+        a.click();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+
+        // 記録に追加
+        recs.unshift({ no: nextNo, prop: propName, cat: selCat, label: label, time: time, date: date });
+        render();
+        updateBtns();
+      }, 'image/jpeg', 0.92);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateBtns() {
   if (!selPart) return;
   var nextNo = recs.length + 1;
   var label = selPart.split('｜')[1];
   document.getElementById('sel-info').innerHTML = '選択中：<b>' + selCat + ' › ' + label + '</b>　<span style="color:#BA7517">次はNo.' + nextNo + '</span>';
-  var btn = document.getElementById('shoot-btn');
-  btn.textContent = 'No.' + nextNo + '　撮影する　—　' + label;
+  document.getElementById('shoot-btn').textContent = 'No.' + nextNo + ' カメラ撮影';
+  document.getElementById('pick-btn').textContent = 'No.' + nextNo + ' 写真を選ぶ';
 }
 
 function render() {
@@ -371,9 +426,17 @@ function render() {
     return;
   }
   var html = recs.map(function(r, i){
-    return '<div class="log-item"><div class="log-num">No.' + r.no + '</div><div class="log-dot"></div><div class="log-body"><div class="log-part">' + r.label + '</div><div class="log-meta">' + r.cat + '　' + r.date + ' ' + r.time + '</div></div><button onclick="deleteRec(' + i + ')" style="flex-shrink:0;background:none;border:none;color:#e05050;font-size:20px;cursor:pointer;padding:4px 8px;">×</button></div>';
+    return '<div class="log-item">'
+      + '<div class="log-num">No.' + r.no + '</div>'
+      + '<div class="log-dot"></div>'
+      + '<div class="log-body">'
+      + '<div class="log-part">' + r.label + '</div>'
+      + '<div class="log-meta">' + r.cat + '　' + r.date + ' ' + r.time + '</div>'
+      + '</div>'
+      + '<button class="del-btn" onclick="deleteRec(' + i + ')">×</button>'
+      + '</div>';
   }).join('');
-  html += '<button class="exp-btn" onclick="exportCSV()">記録をCSVで書き出す（帰社後Googleドライブへ）</button>';
+  html += '<button class="exp-btn" onclick="exportCSV()">記録をCSVで書き出す</button>';
   wrap.innerHTML = html;
 }
 
@@ -382,11 +445,12 @@ function deleteRec(idx) {
   if (!confirm('No.' + r.no + '「' + r.label + '」を削除しますか？')) return;
   recs.splice(idx, 1);
   render();
+  updateBtns();
 }
 
 function clearAll() {
   if (recs.length === 0) return;
-  if (confirm('撮影記録をすべてリセットしますか？')) { recs = []; render(); }
+  if (confirm('撮影記録をすべてリセットしますか？')) { recs = []; render(); updateBtns(); }
 }
 
 function exportCSV() {
@@ -405,56 +469,6 @@ function exportCSV() {
 document.getElementById('prop-input').addEventListener('keydown', function(e){
   if (e.key === 'Enter') fixProp();
 });
-
- // 写真選択専用（カメラではなくアルバム）
-function pickPhotoFromLibrary(callback) {
-  var input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.removeAttribute('capture'); // ←これ重要
-
-  input.onchange = function(e) {
-    if (e.target.files && e.target.files[0]) {
-      callback(e.target.files[0]);
-    }
-  };
-
-  input.click();
-}
-function addNumberToImage(file, text, callback) {
-  var reader = new FileReader();
-
-  reader.onload = function(e) {
-    var img = new Image();
-    img.onload = function() {
-      var canvas = document.createElement('canvas');
-      var ctx = canvas.getContext('2d');
-
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      // 元画像描画
-      ctx.drawImage(img, 0, 0);
-
-      // 背景（黒帯）
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(0, img.height - 80, img.width, 80);
-
-      // 文字（白）
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 40px sans-serif';
-      ctx.fillText(text, 20, img.height - 30);
-
-      canvas.toBlob(function(blob) {
-        callback(blob);
-      }, 'image/jpeg', 0.95);
-    };
-    img.src = e.target.result;
-  };
-
-  reader.readAsDataURL(file);
-}
- 
 </script>
 </body>
 </html>
