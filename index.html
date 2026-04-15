@@ -345,7 +345,7 @@ function render() {
     return;
   }
   var html = recs.map(function(r, i){
-    return '<div class="log-item"><div class="log-num">' + (recs.length - i) + '</div><div class="log-dot"></div><div class="log-body"><div class="log-part">' + r.label + '</div><div class="log-meta">' + r.cat + '　' + r.prop + '　' + r.date + ' ' + r.time + '</div></div></div>';
+    return '<div class="log-item"><div class="log-num">No.' + r.no + '</div><div class="log-dot"></div><div class="log-body"><div class="log-part">' + r.label + '</div><div class="log-meta">' + r.cat + '　' + r.date + ' ' + r.time + '</div></div><button onclick="deleteRec(' + i + ')" style="flex-shrink:0;background:none;border:none;color:#e05050;font-size:20px;cursor:pointer;padding:4px 8px;">×</button></div>';
   }).join('');
   html += '<button class="exp-btn" onclick="exportCSV()">記録をCSVで書き出す（帰社後Googleドライブへ）</button>';
   wrap.innerHTML = html;
@@ -379,35 +379,6 @@ function exportCSV() {
 document.getElementById('prop-input').addEventListener('keydown', function(e){
   if (e.key === 'Enter') fixProp();
 });
- <!-- ここに追加！ -->
-  <input type="file" accept="image/*" capture="camera" id="camera">
-  <img id="preview">
-  <a id="download" download="photo.jpg">保存</a>
-
-  <script>
-    const camera = document.getElementById('camera');
-    const preview = document.getElementById('preview');
-    const download = document.getElementById('download');
-
-    camera.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      const url = URL.createObjectURL(file);
-
-      preview.src = url;
-      download.href = url;
-    });
- <script>
-  const camera = document.getElementById('camera');
-  const preview = document.getElementById('preview');
-  const download = document.getElementById('download');
-
-  camera.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const url = URL.createObjectURL(file);
-
-    preview.src = url;
-    download.href = url;
-  });
 </script>
 </body>
 </html>
