@@ -310,7 +310,33 @@ function record() {
   input.accept = 'image/*';
 
   input.onchange = function(e) {
-    if (e.target.files && e.target.files[0]) {
+  if (e.target.files && e.target.files[0]) {
+    var file = e.target.files[0];
+    var nextNo = recs.length + 1;
+
+    addNumberToImage(file, 'No.' + nextNo, function(processedBlob) {
+
+      // ★ここで保存（ダウンロード）
+      var url = URL.createObjectURL(processedBlob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'No_' + nextNo + '.jpg';
+      a.click();
+
+      // 記録も残す
+      recs.unshift({
+        no: nextNo,
+        prop: propName,
+        cat: selCat,
+        label: label,
+        time: time,
+        date: date
+      });
+
+      render();
+    });
+  }
+};
       recs.unshift({ no: nextNo, prop: propName, cat: selCat, label: label, time: time, date: date });
       render();
       var btn = document.getElementById('shoot-btn');
@@ -395,6 +421,40 @@ function pickPhotoFromLibrary(callback) {
 
   input.click();
 }
+function addNumberToImage(file, text, callback) {
+  var reader = new FileReader();
+
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // 元画像描画
+      ctx.drawImage(img, 0, 0);
+
+      // 背景（黒帯）
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(0, img.height - 80, img.width, 80);
+
+      // 文字（白）
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 40px sans-serif';
+      ctx.fillText(text, 20, img.height - 30);
+
+      canvas.toBlob(function(blob) {
+        callback(blob);
+      }, 'image/jpeg', 0.95);
+    };
+    img.src = e.target.result;
+  };
+
+  reader.readAsDataURL(file);
+}
+ 
 </script>
 </body>
 </html>
